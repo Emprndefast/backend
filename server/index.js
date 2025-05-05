@@ -25,6 +25,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
 // Configuración de CORS
+console.log('FRONTEND_URL en Render:', process.env.FRONTEND_URL);
 const corsOptions = {
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
   credentials: true,
