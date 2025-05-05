@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser');
 const huggingFaceRoutes = require('./routes/huggingFaceRoutes');
 const axios = require('axios');
 const jwt = require('jsonwebtoken');
+const whatsappService = require('./services/whatsappService');
 
 // Cargar variables de entorno
 dotenv.config();
@@ -138,20 +139,18 @@ app.post('/api/bot/test', async (req, res) => {
   }
 });
 
-// Ruta para enviar mensajes de prueba a WhatsApp usando CallMeBot
+// Ruta para enviar mensajes de prueba a WhatsApp usando UltraMsg
 app.post('/api/notifications/test-whatsapp', async (req, res) => {
-  const { phone, message, apiKey } = req.body;
-  if (!phone || !message || !apiKey) {
+  const { instanceId, token, phone } = req.body;
+  if (!instanceId || !token || !phone) {
     return res.status(400).json({ success: false, error: 'Faltan datos requeridos' });
   }
   try {
-    const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(message)}&apikey=${encodeURIComponent(apiKey)}`;
-    const response = await axios.get(url);
-    const data = typeof response.data === 'string' ? response.data.toLowerCase() : '';
-    if (data.includes('message sent') || data.includes('message queued')) {
-      return res.json({ success: true, message: 'Mensaje enviado o en cola correctamente' });
+    const result = await whatsappService.testConnection(instanceId, token, phone);
+    if (result.success) {
+      return res.json({ success: true, message: result.message });
     } else {
-      return res.status(400).json({ success: false, error: response.data });
+      return res.status(400).json({ success: false, error: result.error });
     }
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });

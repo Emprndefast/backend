@@ -1,6 +1,7 @@
 const axios = require('axios');
 const mongoose = require('mongoose');
 const User = require('../models/User');
+const whatsappService = require('../services/whatsappService');
 
 // Modelo de venta simple (ajusta según tu esquema real)
 const Sale = mongoose.model('Sale', new mongoose.Schema({
@@ -12,9 +13,30 @@ const Sale = mongoose.model('Sale', new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 }));
 
-async function sendWhatsAppMessage(phone, message, apiKey) {
-  const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(message)}&apikey=${encodeURIComponent(apiKey)}`;
-  return axios.get(url);
+async function sendWhatsAppMessage(userId, message) {
+  try {
+    // Obtener la configuración de WhatsApp del usuario
+    const user = await User.findById(userId);
+    if (!user || !user.whatsapp) {
+      throw new Error('Usuario no encontrado o sin configuración de WhatsApp');
+    }
+
+    const { instanceId, token, number } = user.whatsapp;
+    if (!instanceId || !token || !number) {
+      throw new Error('Configuración de WhatsApp incompleta');
+    }
+
+    // Enviar mensaje usando UltraMsg
+    const result = await whatsappService.sendMessage(instanceId, token, number, message);
+    if (!result.success) {
+      throw new Error(result.error);
+    }
+
+    return result;
+  } catch (error) {
+    console.error('Error al enviar mensaje por WhatsApp:', error);
+    throw error;
+  }
 }
 
 exports.createSale = async (req, res) => {
@@ -39,7 +61,7 @@ exports.createSale = async (req, res) => {
         `👤 Cliente: ${customer || 'General'}\n` +
         `📅 Fecha: ${fecha}`;
       try {
-        await sendWhatsAppMessage(user.whatsapp.number, message, user.whatsapp.apiKey);
+        await sendWhatsAppMessage(userId, message);
       } catch (err) {
         console.error('Error enviando WhatsApp:', err.message);
       }

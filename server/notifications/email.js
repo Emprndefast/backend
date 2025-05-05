@@ -3,6 +3,7 @@ const { logger, errorLogger } = require('../logs/logger');
 const ejs = require('ejs');
 const path = require('path');
 const fs = require('fs');
+const whatsappService = require('../services/whatsappService');
 
 class EmailService {
   constructor() {
@@ -74,7 +75,7 @@ class EmailService {
     // Enviar email
     await this.sendEmail(user.email, subject, 'low_stock', data);
     // Enviar WhatsApp si está configurado
-    if (user && user.whatsapp && user.whatsapp.number && user.whatsapp.apiKey) {
+    if (user && user.whatsapp && user.whatsapp.instanceId && user.whatsapp.token && user.whatsapp.number) {
       const message =
         `⚠️ Alerta de stock bajo\n` +
         `------------------------\n` +
@@ -82,9 +83,12 @@ class EmailService {
         `📉 Stock actual: ${product.stock}\n` +
         `🔻 Stock mínimo: ${product.minStock}`;
       try {
-        const axios = require('axios');
-        const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(user.whatsapp.number)}&text=${encodeURIComponent(message)}&apikey=${encodeURIComponent(user.whatsapp.apiKey)}`;
-        await axios.get(url);
+        await whatsappService.sendMessage(
+          user.whatsapp.instanceId,
+          user.whatsapp.token,
+          user.whatsapp.number,
+          message
+        );
       } catch (err) {
         console.error('Error enviando WhatsApp (stock bajo):', err.message);
       }
