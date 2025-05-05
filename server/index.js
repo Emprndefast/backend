@@ -1,10 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const connectDB = require('./config/database');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
-const mongoSanitize = require('express-mongo-sanitize');
 const huggingFaceRoutes = require('./routes/huggingFaceRoutes');
 const axios = require('axios');
 const jwt = require('jsonwebtoken');
@@ -25,7 +23,6 @@ app.use(helmet());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
-app.use(mongoSanitize());
 
 // Configuración de CORS
 const corsOptions = {
@@ -165,7 +162,6 @@ app.use((err, req, res, next) => {
 // Iniciar el servidor
 const startServer = async () => {
   try {
-    await connectDB();
     app.listen(PORT, () => {
       console.log(`Servidor backend ejecutándose en http://localhost:${PORT}`);
     });
