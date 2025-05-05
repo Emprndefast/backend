@@ -16,18 +16,10 @@ const PORT = process.env.PORT || 3001;
 // Inicializar la aplicación Express
 const app = express();
 
-// Middleware de seguridad
-app.use(helmet());
-
-// Middleware básicos
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-app.use(cookieParser());
-
 // Configuración de CORS
 console.log('FRONTEND_URL en Render:', process.env.FRONTEND_URL);
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: [process.env.FRONTEND_URL || 'http://localhost:3000', 'https://posntrd.online'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
@@ -36,6 +28,17 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+
+// Middleware de seguridad
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  crossOriginEmbedderPolicy: false
+}));
+
+// Middleware básicos
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(cookieParser());
 
 // Ruta raíz
 app.get('/', (req, res) => {
