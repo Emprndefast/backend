@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: pos-nt-backend
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - MONGODB_URI=mongodb://mongodb:27017/pos-nt
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - pos-network
+
+  mongodb:
+    image: mongo:4.4
+    container_name: pos-nt-mongodb
+    restart: unless-stopped
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password
+    networks:
+      - pos-network
+
+  redis:
+    image: redis:6-alpine
+    container_name: pos-nt-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    networks:
+      - pos-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: pos-nt-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - app
+    networks:
+      - pos-network
+
+volumes:
+  mongodb_data:
+  redis_data:
+
+networks:
+  pos-network:
+    driver: bridge 
