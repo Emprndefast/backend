@@ -10,7 +10,8 @@ const whatsappService = require('./services/whatsappService');
 
 // Cargar variables de entorno
 dotenv.config();
-
+console.log('DEBUG WHATSAPP_INSTANCE_ID:', process.env.WHATSAPP_INSTANCE_ID);
+console.log('DEBUG WHATSAPP_TOKEN:', process.env.WHATSAPP_TOKEN);
 // Definir puerto
 const PORT = process.env.PORT || 3001;
 
