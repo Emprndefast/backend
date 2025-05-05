@@ -141,19 +141,54 @@ app.post('/api/bot/test', async (req, res) => {
 
 // Ruta para enviar mensajes de prueba a WhatsApp usando UltraMsg
 app.post('/api/notifications/test-whatsapp', async (req, res) => {
-  const { instanceId, token, phone } = req.body;
-  if (!instanceId || !token || !phone) {
-    return res.status(400).json({ success: false, error: 'Faltan datos requeridos' });
+  console.log('Recibida petición de prueba WhatsApp:', req.body);
+  
+  // Fallback a variables de entorno si faltan datos
+  let { instanceId, token, phone } = req.body;
+  if (!instanceId) {
+    instanceId = process.env.WHATSAPP_INSTANCE_ID || process.env.REACT_APP_WHATSAPP_INSTANCE_ID;
+    console.log('Usando instanceId del backend:', instanceId);
   }
+  if (!token) {
+    token = process.env.WHATSAPP_TOKEN || process.env.REACT_APP_WHATSAPP_TOKEN;
+    console.log('Usando token del backend:', token ? '[OK]' : '[VACÍO]');
+  }
+  console.log('Valores finales usados:', { instanceId, token, phone });
+  
+  if (!instanceId || !token || !phone) {
+    console.error('Faltan datos requeridos:', { instanceId, token, phone });
+    return res.status(400).json({ 
+      success: false, 
+      error: 'Faltan datos requeridos',
+      details: {
+        instanceId: !instanceId,
+        token: !token,
+        phone: !phone
+      }
+    });
+  }
+
   try {
+    console.log('Iniciando prueba de conexión WhatsApp');
     const result = await whatsappService.testConnection(instanceId, token, phone);
+    
     if (result.success) {
+      console.log('Prueba de WhatsApp exitosa');
       return res.json({ success: true, message: result.message });
     } else {
-      return res.status(400).json({ success: false, error: result.error });
+      console.error('Error en prueba de WhatsApp:', result.error);
+      return res.status(400).json({ 
+        success: false, 
+        error: result.error 
+      });
     }
   } catch (error) {
-    return res.status(500).json({ success: false, error: error.message });
+    console.error('Error en servidor:', error);
+    return res.status(500).json({ 
+      success: false, 
+      error: error.message,
+      details: error.response?.data || 'Error interno del servidor'
+    });
   }
 });
 
