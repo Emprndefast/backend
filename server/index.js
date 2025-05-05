@@ -89,13 +89,52 @@ app.post('/api/bot/notify', async (req, res) => {
     const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
     const response = await axios.post(telegramUrl, {
       chat_id: chatId,
-      text
+      text,
+      parse_mode: 'Markdown'
     });
     console.log('✅ [API] Notificación enviada a Telegram:', response.data);
     res.json({ success: true, telegram: response.data });
   } catch (error) {
     console.error('❌ [API] Error al enviar a Telegram:', error.response?.data || error.message);
     res.status(500).json({ error: 'Error al enviar a Telegram', details: error.response?.data || error.message });
+  }
+});
+
+// Ruta para probar la conexión con el bot de Telegram
+app.post('/api/bot/test', async (req, res) => {
+  const { botToken, chatId } = req.body;
+  console.log('🔍 [API] Prueba de conexión con bot:', { botToken, chatId });
+
+  if (!botToken || !chatId) {
+    return res.status(400).json({ error: 'Faltan datos requeridos', message: 'botToken y chatId son obligatorios' });
+  }
+
+  try {
+    // Primero probamos obtener información del bot
+    const getMeUrl = `https://api.telegram.org/bot${botToken}/getMe`;
+    const getMeResponse = await axios.get(getMeUrl);
+    console.log('✅ [API] Información del bot:', getMeResponse.data);
+
+    // Luego probamos enviar un mensaje
+    const sendMessageUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
+    const sendMessageResponse = await axios.post(sendMessageUrl, {
+      chat_id: chatId,
+      text: '✅ Conexión exitosa con Telegram',
+      parse_mode: 'Markdown'
+    });
+    console.log('✅ [API] Mensaje de prueba enviado:', sendMessageResponse.data);
+
+    res.json({
+      success: true,
+      bot: getMeResponse.data,
+      message: sendMessageResponse.data
+    });
+  } catch (error) {
+    console.error('❌ [API] Error al probar conexión con Telegram:', error.response?.data || error.message);
+    res.status(500).json({ 
+      error: 'Error al probar conexión con Telegram', 
+      details: error.response?.data || error.message 
+    });
   }
 });
 
