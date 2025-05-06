@@ -101,4 +101,95 @@ exports.sendWhatsAppTest = async (payload) => {
     }
     throw error;
   }
+};
+
+// Notificación de stock bajo por WhatsApp
+exports.sendWhatsAppStockLow = async (stockData, userConfig = {}) => {
+  try {
+    const instanceId = userConfig.instanceId || process.env.WHATSAPP_INSTANCE_ID;
+    const token = userConfig.token || process.env.WHATSAPP_TOKEN;
+    const phone = userConfig.phone || process.env.WHATSAPP_PHONE;
+
+    if (!instanceId || !token || !phone) {
+      console.error('Faltan datos para enviar WhatsApp (stock bajo):', { instanceId, token, phone });
+      return;
+    }
+
+    const text =
+      `⚠️ *Stock bajo*\n` +
+      `Producto: ${stockData.productName}\n` +
+      `Stock actual: ${stockData.currentStock}\n` +
+      `Stock mínimo: ${stockData.minStock}`;
+
+    const payload = {
+      token,
+      to: phone,
+      body: text,
+    };
+    console.log('Enviando notificación de stock bajo a WhatsApp con payload:', payload);
+    const response = await axios.post(`https://api.ultramsg.com/${instanceId}/messages/chat`, payload);
+    console.log('Respuesta de UltraMsg (stock bajo):', response.data);
+    console.log('Notificación de stock bajo enviada a WhatsApp');
+  } catch (error) {
+    if (error.response) {
+      console.error('Error al enviar notificación de stock bajo a WhatsApp (respuesta):', error.response.data);
+    } else {
+      console.error('Error al enviar notificación de stock bajo a WhatsApp:', error.message);
+    }
+  }
+};
+
+// PLANTILLAS para otros tipos de notificaciones útiles para el POS:
+// Notificación de nuevo producto
+exports.sendWhatsAppNewProduct = async (productData, userConfig = {}) => {
+  // Implementar lógica similar si lo necesitas
+};
+
+// Notificación de resumen diario por WhatsApp
+exports.sendWhatsAppDailySummary = async (summaryData, userConfig = {}) => {
+  try {
+    const instanceId = userConfig.instanceId || process.env.WHATSAPP_INSTANCE_ID;
+    const token = userConfig.token || process.env.WHATSAPP_TOKEN;
+    const phone = userConfig.phone || process.env.WHATSAPP_PHONE;
+
+    if (!instanceId || !token || !phone) {
+      console.error('Faltan datos para enviar WhatsApp (resumen diario):', { instanceId, token, phone });
+      return;
+    }
+
+    const text =
+      `📊 *Resumen Diario de Ventas*\n` +
+      `Fecha: ${summaryData.date}\n` +
+      `Total Ventas: $${summaryData.totalSales}\n` +
+      `Productos Vendidos: ${summaryData.totalItems}\n` +
+      `Clientes Atendidos: ${summaryData.totalCustomers || 'N/A'}`;
+
+    const payload = {
+      token,
+      to: phone,
+      body: text,
+    };
+    console.log('Enviando resumen diario a WhatsApp con payload:', payload);
+    const response = await axios.post(`https://api.ultramsg.com/${instanceId}/messages/chat`, payload);
+    console.log('Respuesta de UltraMsg (resumen diario):', response.data);
+    console.log('Resumen diario enviado a WhatsApp');
+  } catch (error) {
+    if (error.response) {
+      console.error('Error al enviar resumen diario a WhatsApp (respuesta):', error.response.data);
+    } else {
+      console.error('Error al enviar resumen diario a WhatsApp:', error.message);
+    }
+  }
+};
+
+// Estructura para programar el envío automático por usuario (ejemplo, usando node-cron o similar)
+// Puedes guardar la hora preferida de cada usuario en la base de datos y programar el envío con un job por usuario.
+// Ejemplo:
+// cron.schedule('0 21 * * *', () => { // 21:00 todos los días
+//   sendWhatsAppDailySummary(summaryData, userConfig);
+// });
+
+// Notificación de recordatorio de pago
+exports.sendWhatsAppPaymentReminder = async (reminderData, userConfig = {}) => {
+  // Implementar lógica similar si lo necesitas
 }; 

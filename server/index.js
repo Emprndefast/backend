@@ -8,6 +8,7 @@ const axios = require('axios');
 const jwt = require('jsonwebtoken');
 const whatsappService = require('./services/whatsappService');
 const saleRoutes = require('./routes/saleRoutes');
+const notificationRoutes = require('./routes/notifications');
 
 // Cargar variables de entorno
 dotenv.config();
@@ -226,6 +227,7 @@ app.post('/api/auth/login', (req, res) => {
 // Configurar rutas
 app.use('/api/huggingface', huggingFaceRoutes);
 app.use('/api/sales', saleRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Ruta catch-all para cualquier otra ruta
 app.use('*', (req, res) => {
