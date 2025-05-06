@@ -13,6 +13,7 @@ const cron = require('node-cron');
 const admin = require('firebase-admin');
 const { sendWhatsAppDailySummary } = require('./services/notificationService');
 const { getFirestore } = require('firebase-admin/firestore');
+const crmRoutes = require('./routes/crm');
 
 // Cargar variables de entorno
 dotenv.config();
@@ -232,6 +233,7 @@ app.post('/api/auth/login', (req, res) => {
 app.use('/api/huggingface', huggingFaceRoutes);
 app.use('/api/sales', saleRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/crm', crmRoutes);
 
 // Ruta catch-all para cualquier otra ruta
 app.use('*', (req, res) => {
