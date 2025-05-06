@@ -23,7 +23,11 @@ const app = express();
 // Configuración de CORS
 console.log('FRONTEND_URL en Render:', process.env.FRONTEND_URL);
 const corsOptions = {
-  origin: [process.env.FRONTEND_URL || 'http://localhost:3000', 'https://posntrd.online'],
+  origin: [
+    'https://posntrd.online', // Frontend en producción
+    'http://localhost:3000', // Desarrollo local
+    process.env.FRONTEND_URL // Variable de entorno si aplica
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
