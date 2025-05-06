@@ -1,18 +1,6 @@
 const axios = require('axios');
-const mongoose = require('mongoose');
-const User = require('../models/User');
 const whatsappService = require('../services/whatsappService');
 const { sendTelegram, sendWhatsApp } = require('../services/notificationService');
-
-// Modelo de venta simple (ajusta según tu esquema real)
-const Sale = mongoose.model('Sale', new mongoose.Schema({
-  products: Array,
-  total: Number,
-  customer: String,
-  ticketNumber: String,
-  userId: String,
-  createdAt: { type: Date, default: Date.now }
-}));
 
 // Array temporal para guardar ventas
 const sales = [];
