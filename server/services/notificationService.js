@@ -5,6 +5,15 @@ function buildProductList(items) {
   return items.map(item => `• ${item.name} x${item.quantity}`).join('\n');
 }
 
+function getLocalDateTime() {
+  const now = new Date();
+  return now.toLocaleString('es-DO', {
+    timeZone: 'America/Santo_Domingo',
+    dateStyle: 'short',
+    timeStyle: 'short'
+  });
+}
+
 exports.sendTelegram = async (sale) => {
   try {
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
@@ -12,7 +21,7 @@ exports.sendTelegram = async (sale) => {
     const ticket = sale.ticketNumber || sale.id || 'N/A';
     const total = sale.total || 0;
     const customer = sale.customer?.name || 'Cliente General';
-    const date = new Date().toLocaleString('es-DO', { dateStyle: 'short', timeStyle: 'short' });
+    const date = getLocalDateTime();
     const productList = buildProductList(sale.items);
     const text =
       `🧾 *Nueva venta realizada*\n` +
@@ -49,7 +58,7 @@ exports.sendWhatsApp = async (sale, userConfig = {}) => {
     const ticket = sale.ticketNumber || sale.id || 'N/A';
     const total = sale.total || 0;
     const customer = sale.customer?.name || 'Cliente General';
-    const date = new Date().toLocaleString('es-DO', { dateStyle: 'short', timeStyle: 'short' });
+    const date = getLocalDateTime();
     const productList = buildProductList(sale.items);
     const text =
       `🧾 *Nueva venta realizada*\n` +
