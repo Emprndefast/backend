@@ -37,7 +37,10 @@ exports.createSale = async (req, res) => {
     sales.push(sale); // Guardar en memoria para pruebas
     console.log('Venta recibida:', sale);
     await sendTelegram(sale);
-    // Pasar la configuración de WhatsApp del usuario si existe
+    // Si no hay cliente, usar el número global para WhatsApp
+    if (!sale.customer) {
+      sale.customer = { name: 'Cliente General', phone: process.env.WHATSAPP_PHONE };
+    }
     const userConfig = sale.whatsappConfig || {};
     await sendWhatsApp(sale, userConfig);
     res.status(201).json({ success: true, sale });
