@@ -41,8 +41,16 @@ exports.createSale = async (req, res) => {
     if (!sale.customer) {
       sale.customer = { name: 'Cliente General', phone: process.env.WHATSAPP_PHONE };
     }
-    const userConfig = sale.whatsappConfig || {};
-    await sendWhatsApp(sale, userConfig);
+    // Notificación de WhatsApp: prioridad usuario, luego cliente si existe
+    const whatsappNumbers = sale.whatsappNumbers || [];
+    if (whatsappNumbers.length > 0) {
+      for (const phone of whatsappNumbers) {
+        const userConfig = { ...sale.whatsappConfig, phone };
+        await sendWhatsApp(sale, userConfig);
+      }
+    } else {
+      console.log('No hay números de WhatsApp para notificar.');
+    }
     res.status(201).json({ success: true, sale });
   } catch (error) {
     console.error('Error al procesar venta:', error);
