@@ -4,7 +4,7 @@ exports.sendTelegram = async (sale) => {
   try {
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     const chatId = process.env.TELEGRAM_CHAT_ID;
-    const text = `Nueva venta: $${sale.total} - Cliente: ${sale.customer}`;
+    const text = `Nueva venta: $${sale.total} - Cliente: ${sale.customer?.name || 'Cliente General'}`;
     console.log('Enviando notificación a Telegram...');
     await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
       chat_id: chatId,
@@ -16,12 +16,20 @@ exports.sendTelegram = async (sale) => {
   }
 };
 
-exports.sendWhatsApp = async (sale) => {
+exports.sendWhatsApp = async (sale, userConfig = {}) => {
   try {
-    const instanceId = process.env.WHATSAPP_INSTANCE_ID;
-    const token = process.env.WHATSAPP_TOKEN;
-    const phone = process.env.WHATSAPP_PHONE;
-    const text = `Nueva venta: $${sale.total} - Cliente: ${sale.customer}`;
+    // Prioridad: config del usuario > config global (.env)
+    const instanceId = userConfig.instanceId || process.env.WHATSAPP_INSTANCE_ID;
+    const token = userConfig.token || process.env.WHATSAPP_TOKEN;
+    const phone = sale.customer?.phone || userConfig.phone || process.env.WHATSAPP_PHONE;
+
+    if (!instanceId || !token || !phone) {
+      console.error('Faltan datos para enviar WhatsApp:', { instanceId, token, phone });
+      return;
+    }
+
+    const customerName = sale.customer?.name || 'Cliente General';
+    const text = `Nueva venta: $${sale.total} - Cliente: ${customerName}`;
     const payload = {
       token,
       to: phone,

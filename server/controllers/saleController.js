@@ -37,7 +37,9 @@ exports.createSale = async (req, res) => {
     sales.push(sale); // Guardar en memoria para pruebas
     console.log('Venta recibida:', sale);
     await sendTelegram(sale);
-    await sendWhatsApp(sale);
+    // Pasar la configuración de WhatsApp del usuario si existe
+    const userConfig = sale.whatsappConfig || {};
+    await sendWhatsApp(sale, userConfig);
     res.status(201).json({ success: true, sale });
   } catch (error) {
     console.error('Error al procesar venta:', error);
