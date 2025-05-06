@@ -9,6 +9,10 @@ const jwt = require('jsonwebtoken');
 const whatsappService = require('./services/whatsappService');
 const saleRoutes = require('./routes/saleRoutes');
 const notificationRoutes = require('./routes/notifications');
+const cron = require('node-cron');
+const admin = require('firebase-admin');
+const { sendWhatsAppDailySummary } = require('./services/notificationService');
+const { getFirestore } = require('firebase-admin/firestore');
 
 // Cargar variables de entorno
 dotenv.config();
@@ -244,6 +248,69 @@ app.use((err, req, res, next) => {
     error: 'Error interno del servidor',
     message: process.env.NODE_ENV === 'development' ? err.message : undefined
   });
+});
+
+// Inicializar Firebase Admin si no está inicializado
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
+const db = getFirestore();
+
+// Tarea programada para enviar resumen diario
+cron.schedule('*/10 * * * *', async () => {
+  try {
+    console.log('[CRON] Ejecutando tarea de resumen diario...');
+    const configsSnap = await db.collection('users').get();
+    const now = new Date();
+    const currentHour = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+    for (const doc of configsSnap.docs) {
+      const user = doc.data();
+      const userId = doc.id;
+      const dailyConfig = user.dailySummaryConfig;
+      if (!dailyConfig || !dailyConfig.enabled) continue;
+      // Solo ejecutar si la hora coincide (solo minutos exactos)
+      if (dailyConfig.hour && dailyConfig.hour.substring(0,5) === currentHour.substring(0,5)) {
+        // Leer ventas del día
+        const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+        const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+        const salesSnap = await db.collection('sales')
+          .where('userId', '==', userId)
+          .where('date', '>=', start)
+          .where('date', '<=', end)
+          .get();
+        const sales = salesSnap.docs.map(doc => doc.data());
+        const totalSales = sales.reduce((sum, sale) => sum + (Number(sale.total) || 0), 0);
+        const totalItems = sales.reduce((sum, sale) => sum + (Array.isArray(sale.items) ? sale.items.reduce((itemSum, item) => itemSum + (Number(item.quantity) || 0), 0) : 0), 0);
+        const totalCustomers = new Set(sales.map(sale => sale.customerId).filter(Boolean)).size;
+        const summaryData = {
+          date: now.toLocaleDateString('es-DO'),
+          totalSales,
+          totalItems,
+          totalCustomers
+        };
+        // WhatsApp
+        if (dailyConfig.channel === 'whatsapp' || dailyConfig.channel === 'both') {
+          const whatsapp = user.whatsapp || {};
+          await sendWhatsAppDailySummary(summaryData, {
+            instanceId: whatsapp.instanceId,
+            token: whatsapp.token,
+            phone: whatsapp.number
+          });
+        }
+        // Telegram (si tienes función)
+        // if (dailyConfig.channel === 'telegram' || dailyConfig.channel === 'both') {
+        //   const telegram = user.telegram || {};
+        //   await sendTelegramDailySummary(summaryData, {
+        //     botToken: telegram.botToken,
+        //     chatId: telegram.chatId
+        //   });
+        // }
+        console.log(`[CRON] Resumen diario enviado para usuario ${userId}`);
+      }
+    }
+  } catch (err) {
+    console.error('[CRON] Error en tarea de resumen diario:', err);
+  }
 });
 
 // Iniciar el servidor
