@@ -18,7 +18,7 @@ exports.sendTelegram = async (sale) => {
   try {
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     const chatId = process.env.TELEGRAM_CHAT_ID;
-    const ticket = sale.ticketNumber || sale.id || 'N/A';
+    const ticket = sale.id || 'N/A';
     const total = sale.total || 0;
     const customer = sale.customer?.name || 'Cliente General';
     const date = getLocalDateTime();
@@ -55,7 +55,7 @@ exports.sendWhatsApp = async (sale, userConfig = {}) => {
       return;
     }
 
-    const ticket = sale.ticketNumber || sale.id || 'N/A';
+    const ticket = sale.id || 'N/A';
     const total = sale.total || 0;
     const customer = sale.customer?.name || 'Cliente General';
     const date = getLocalDateTime();
