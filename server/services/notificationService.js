@@ -4,7 +4,17 @@ exports.sendTelegram = async (sale) => {
   try {
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     const chatId = process.env.TELEGRAM_CHAT_ID;
-    const text = `Nueva venta: $${sale.total} - Cliente: ${sale.customer?.name || 'Cliente General'}`;
+    const ticket = sale.ticketNumber || sale.id || 'N/A';
+    const total = sale.total || 0;
+    const customer = sale.customer?.name || 'Cliente General';
+    const date = new Date().toLocaleString('es-DO', { dateStyle: 'short', timeStyle: 'short' });
+    const text =
+      `🧾 Nueva venta realizada\n` +
+      `━━━━━━━━━━━━━━━━━━━━━━\n` +
+      `🆔 Ticket: ${ticket}\n` +
+      `💵 Total: $${total}\n` +
+      `👤 Cliente: ${customer}\n` +
+      `📅 Fecha: ${date}`;
     console.log('Enviando notificación a Telegram...');
     await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
       chat_id: chatId,
@@ -28,8 +38,17 @@ exports.sendWhatsApp = async (sale, userConfig = {}) => {
       return;
     }
 
-    const customerName = sale.customer?.name || 'Cliente General';
-    const text = `Nueva venta: $${sale.total} - Cliente: ${customerName}`;
+    const ticket = sale.ticketNumber || sale.id || 'N/A';
+    const total = sale.total || 0;
+    const customer = sale.customer?.name || 'Cliente General';
+    const date = new Date().toLocaleString('es-DO', { dateStyle: 'short', timeStyle: 'short' });
+    const text =
+      `🧾 *Nueva venta realizada*\n` +
+      `━━━━━━━━━━━━━━━━━━━━━━\n` +
+      `🆔 *Ticket:* ${ticket}\n` +
+      `💵 *Total:* $${total}\n` +
+      `👤 *Cliente:* ${customer}\n` +
+      `📅 *Fecha:* ${date}`;
     const payload = {
       token,
       to: phone,
