@@ -51,6 +51,10 @@ exports.createSale = async (req, res) => {
     } else {
       console.log('No hay números de WhatsApp para notificar.');
     }
+    // Generar ticketNumber si no existe
+    if (!sale.ticketNumber) {
+      sale.ticketNumber = 'TICKET-' + Date.now();
+    }
     res.status(201).json({ success: true, sale });
   } catch (error) {
     console.error('Error al procesar venta:', error);

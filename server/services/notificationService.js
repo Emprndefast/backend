@@ -1,5 +1,10 @@
 const axios = require('axios');
 
+function buildProductList(items) {
+  if (!items || !Array.isArray(items) || items.length === 0) return '- Sin productos';
+  return items.map(item => `• ${item.name} x${item.quantity}`).join('\n');
+}
+
 exports.sendTelegram = async (sale) => {
   try {
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
@@ -8,17 +13,20 @@ exports.sendTelegram = async (sale) => {
     const total = sale.total || 0;
     const customer = sale.customer?.name || 'Cliente General';
     const date = new Date().toLocaleString('es-DO', { dateStyle: 'short', timeStyle: 'short' });
+    const productList = buildProductList(sale.items);
     const text =
-      `🧾 Nueva venta realizada\n` +
+      `🧾 *Nueva venta realizada*\n` +
       `━━━━━━━━━━━━━━━━━━━━━━\n` +
-      `🆔 Ticket: ${ticket}\n` +
-      `💵 Total: $${total}\n` +
-      `👤 Cliente: ${customer}\n` +
-      `📅 Fecha: ${date}`;
+      `🆔 *Ticket:* ${ticket}\n` +
+      `💵 *Total:* $${total}\n` +
+      `👤 *Cliente:* ${customer}\n` +
+      `🛒 *Productos:*\n${productList}\n` +
+      `📅 *Fecha:* ${date}`;
     console.log('Enviando notificación a Telegram...');
     await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
       chat_id: chatId,
       text,
+      parse_mode: 'Markdown'
     });
     console.log('Notificación enviada a Telegram');
   } catch (error) {
@@ -34,7 +42,7 @@ exports.sendWhatsApp = async (sale, userConfig = {}) => {
     const phone = sale.customer?.phone || userConfig.phone || process.env.WHATSAPP_PHONE;
 
     if (!instanceId || !token || !phone) {
-      console.error('Faltan datos para enviar WhatsApp:', { instanceId, token, phone });
+      console.error('Faltan datos para enviar WhatsApp,:', { instanceId, token, phone });
       return;
     }
 
@@ -42,12 +50,14 @@ exports.sendWhatsApp = async (sale, userConfig = {}) => {
     const total = sale.total || 0;
     const customer = sale.customer?.name || 'Cliente General';
     const date = new Date().toLocaleString('es-DO', { dateStyle: 'short', timeStyle: 'short' });
+    const productList = buildProductList(sale.items);
     const text =
       `🧾 *Nueva venta realizada*\n` +
       `━━━━━━━━━━━━━━━━━━━━━━\n` +
       `🆔 *Ticket:* ${ticket}\n` +
       `💵 *Total:* $${total}\n` +
       `👤 *Cliente:* ${customer}\n` +
+      `🛒 *Productos:*\n${productList}\n` +
       `📅 *Fecha:* ${date}`;
     const payload = {
       token,
