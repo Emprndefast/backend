@@ -11,6 +11,7 @@ const saleRoutes = require('./routes/saleRoutes');
 const notificationRoutes = require('./routes/notifications');
 const cron = require('node-cron');
 const admin = require('firebase-admin');
+const serviceAccount = require('/etc/secrets/firebase-key.json');
 const { sendWhatsAppDailySummary } = require('./services/notificationService');
 const { getFirestore } = require('firebase-admin/firestore');
 const crmRoutes = require('./routes/crm');
@@ -254,7 +255,10 @@ app.use((err, req, res, next) => {
 
 // Inicializar Firebase Admin si no está inicializado
 if (!admin.apps.length) {
-  admin.initializeApp();
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    // databaseURL: "https://<tu-proyecto>.firebaseio.com" // solo si usas Realtime Database
+  });
 }
 const db = getFirestore();
 
